@@ -1,6 +1,4 @@
-[10:39:13][io.ioManeger][Info] : Starting IOManager...
-[10:39:13][io.ioManeger][Info] : Starting daemon on port: 5555
-[10:39:41][io.ioManeger][Info] : Creating connection to: /192.168.2.100
-[10:39:41][io.ioManeger][Info] : Connection made! :-)
-ion to: DGmoN-pc/192.168.2.100
-[10:39:41][io.ioManeger][Info] : Connection made! :-)
+[12:57:00][io.ioManeger][Info] : Starting IOManager...
+[12:57:00][io.ioManeger][Info] : Starting daemon on port: 5555
+[12:57:17][io.ioManeger][Info] : Creating connection to: /192.168.2.100
+[12:57:17][io.ioManeger][Info] : Connection made! :-)

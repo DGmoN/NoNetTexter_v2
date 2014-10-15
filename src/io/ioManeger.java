@@ -4,6 +4,8 @@ package io;
  * 			 Client starts with argument x -> socket listening port = x
  * 
  * */
+import gui.front.NetFrame;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,10 +25,6 @@ public abstract class ioManeger extends Thread {
 	private static class Connection { // Connection is the port master, manages
 										// outgoing and incoming bytes
 
-		private static int nextID = 0;
-
-		public final int ConnectionID;
-
 		public final boolean isOutgoingConection;
 
 		private final InputStream FromTarget;
@@ -41,7 +39,6 @@ public abstract class ioManeger extends Thread {
 			isOutgoingConection = a;
 			FromTarget = s.getInputStream();
 			ToTarget = s.getOutputStream();
-			ConnectionID = nextID++;
 			Name = _socket.getInetAddress().getHostName();
 		}
 	}
@@ -71,15 +68,15 @@ public abstract class ioManeger extends Thread {
 			while (true) {
 				try {
 					if (isOutgoing_) {
-
 						TT.Write("Trying to connect to: " + Target
-								+ "  |\tPort: " + targetPort, 0);
+								+ "  \tPort: " + targetPort, 0);
 						_Socket = new Socket(Target, targetPort);
 						isOutgoing_ = false;
 					} else {
 						_Socket = SSocket.accept();
 					}
 					createConnection(_Socket, false);
+					NetFrame.MainWindow.updateListOfContacts();
 					resetSockets();
 				} catch (SocketTimeoutException e) {
 
@@ -143,7 +140,7 @@ public abstract class ioManeger extends Thread {
 		String[] ret = new String[Connections.size()];
 		int x = 0;
 		for (Connection s : Connections) {
-			ret[x++] = s.Name + "/t" + s.ConnectionID;
+			ret[x++] = s.Name;
 		}
 		return ret;
 	}

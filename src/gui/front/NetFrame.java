@@ -1,4 +1,4 @@
-package gui.font;
+package gui.front;
 
 import java.awt.Label;
 import java.awt.TextArea;
@@ -7,6 +7,7 @@ import java.awt.TextField;
 import io.ioManeger;
 
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
@@ -24,11 +25,9 @@ public class NetFrame extends JFrame {
 		public void run() {
 			while (true) {
 				try {
-					if (ConnectedList.lines.getSize() != ioManeger
+					if (ConnectedList.Boxes.length != ioManeger
 							.getConnectedCount()) {
-						ConnectedList.lines.clear();
-						ConnectedList.lines.add(ioManeger.getConnectedNames());
-						ConnectedList.updateText();
+						ClientDataPanel.update();
 					}
 					sleep(250);
 				} catch (InterruptedException e) {
@@ -40,23 +39,78 @@ public class NetFrame extends JFrame {
 	};
 
 	// GUI Elements : Classes
-	private class ContactList extends JTextArea {
-		private LINES lines = new LINES(null);
+	private class ContactList extends JPanel {
+		private ClientCheckBox[] Boxes = new ClientCheckBox[0];
 
 		public ContactList() {
-			this.setEditable(false);
+			this.setSize(180, 400);
+			this.setLocation(5, 35);
+			this.setVisible(true);
+			this.setBorder(BorderFactory.createBevelBorder(1));
+			this.setLayout(null);
 		}
 
 		public void updateText() {
-			for (String s : lines.getAllLines()) {
-				this.setText(this.getText() + "\n" + s);
+			if (Boxes != null)
+				for (ClientCheckBox a : Boxes) {
+					this.remove(a);
+				}
+			String[] names = ioManeger.getConnectedNames();
+			Boxes = new ClientCheckBox[names.length];
+			int x = 0;
+			for (String a : names) {
+				Boxes[x] = new ClientCheckBox(a);
+				Boxes[x].setLocation(5, 5 * (x + 1));
+				Boxes[x].setVisible(true);
+				this.add(Boxes[x]);
+				x++;
 			}
+		}
+	}
+
+	private class ClientPannel extends JPanel {
+
+		public ClientPannel() {
+			this.setSize(200, 600);
+			this.setLocation(600, 0);
+			this.setVisible(true);
+			this.setBorder(BorderFactory.createBevelBorder(1));
+			this.setLayout(null);
+
+			// ConnectedList
+			this.add(ConnectedList);
+
+			// UserInfo
+			UserInfo.setSize(200, 25);
+			UserInfo.setLocation(5, 5);
+			UserInfo.setVisible(true);
+			UserInfo.setText(ioManeger.getThisID() + ":"
+					+ ioManeger.getListeningPort());
+			this.add(UserInfo);
+		}
+
+		public void update() {
+			ConnectedList.updateText();
+		}
+	}
+
+	private class ClientCheckBox extends JCheckBox {
+		final String Target;
+
+		public ClientCheckBox(String name) {
+			Target = name;
+			this.setToolTipText("Select/Deselect: " + Target);
+			this.setText(Target);
+			this.setSize(180, 25);
 		}
 	}
 
 	// GUI Elements : Objects
 	private JPanel MainPanel;
-	private JPanel ClientDataPanel;
+	private ClientPannel ClientDataPanel;
+
+	ContactList ConnectedList = new ContactList();
+
 	private ButtonS ConnectButton = new ButtonS("Connect", "guiLinks:connect",
 			null) {
 		public void GatherData() {
@@ -68,8 +122,6 @@ public class NetFrame extends JFrame {
 	private TextField TextInput = new TextField();
 
 	private Label UserInfo = new Label();
-
-	private ContactList ConnectedList = new ContactList();
 
 	public NetFrame() {
 		ObjectUpdater.setDaemon(true);
@@ -99,12 +151,7 @@ public class NetFrame extends JFrame {
 		this.add(MainPanel);
 
 		// ClientDataPanel
-		ClientDataPanel = new JPanel();
-		ClientDataPanel.setSize(200, 600);
-		ClientDataPanel.setLocation(600, 0);
-		ClientDataPanel.setVisible(true);
-		ClientDataPanel.setBorder(BorderFactory.createBevelBorder(1));
-		ClientDataPanel.setLayout(null);
+		ClientDataPanel = new ClientPannel();
 		this.add(ClientDataPanel);
 
 		// ConnectButton
@@ -119,25 +166,11 @@ public class NetFrame extends JFrame {
 		TargetInput.setVisible(true);
 		MainPanel.add(TargetInput);
 
-		// UserInfo
-		UserInfo.setSize(200, 25);
-		UserInfo.setLocation(5, 5);
-		UserInfo.setVisible(true);
-		UserInfo.setText(ioManeger.getThisID() + ":"
-				+ ioManeger.getListeningPort());
-		ClientDataPanel.add(UserInfo);
-
 		// TextInput
 		TextInput.setSize(400, 25);
 		TextInput.setLocation(185, 540);
 		TextInput.setVisible(true);
 		MainPanel.add(TextInput);
-
-		// ConnectedList
-		ConnectedList.setLocation(5, 30);
-		ConnectedList.setSize(185, 500);
-		ConnectedList.setVisible(true);
-		ClientDataPanel.add(ConnectedList);
 
 		ObjectUpdater.start();
 	}
@@ -151,6 +184,10 @@ public class NetFrame extends JFrame {
 
 		new guiLinks();
 		new NetFrame();
+	}
+
+	public void updateListOfContacts() {
+		ClientDataPanel.update();
 	}
 
 }
