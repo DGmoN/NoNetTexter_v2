@@ -34,12 +34,15 @@ public abstract class ioManeger extends Thread {
 
 		private final Socket _socket;
 
+		private final String Name;
+
 		public Connection(Socket s, boolean a) throws IOException {
 			_socket = s;
 			isOutgoingConection = a;
 			FromTarget = s.getInputStream();
 			ToTarget = s.getOutputStream();
 			ConnectionID = nextID++;
+			Name = _socket.getInetAddress().getHostName();
 		}
 	}
 
@@ -130,6 +133,19 @@ public abstract class ioManeger extends Thread {
 
 	public static int getListeningPort() {
 		return PORT;
+	}
+
+	public static int getConnectedCount() {
+		return Connections.size();
+	}
+
+	public static String[] getConnectedNames() {
+		String[] ret = new String[Connections.size()];
+		int x = 0;
+		for (Connection s : Connections) {
+			ret[x++] = s.Name + "/t" + s.ConnectionID;
+		}
+		return ret;
 	}
 
 	public static String getThisID() {

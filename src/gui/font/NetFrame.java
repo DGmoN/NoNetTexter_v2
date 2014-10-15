@@ -11,6 +11,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
+import Formating.Strings.LINES;
 import quickLinks.gui.ButtonS;
 import shorts.guiLinks;
 
@@ -23,7 +24,13 @@ public class NetFrame extends JFrame {
 		public void run() {
 			while (true) {
 				try {
-					sleep(750);
+					if (ConnectedList.lines.getSize() != ioManeger
+							.getConnectedCount()) {
+						ConnectedList.lines.clear();
+						ConnectedList.lines.add(ioManeger.getConnectedNames());
+						ConnectedList.updateText();
+					}
+					sleep(250);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -34,7 +41,17 @@ public class NetFrame extends JFrame {
 
 	// GUI Elements : Classes
 	private class ContactList extends JTextArea {
+		private LINES lines = new LINES(null);
 
+		public ContactList() {
+			this.setEditable(false);
+		}
+
+		public void updateText() {
+			for (String s : lines.getAllLines()) {
+				this.setText(this.getText() + "\n" + s);
+			}
+		}
 	}
 
 	// GUI Elements : Objects
@@ -48,7 +65,11 @@ public class NetFrame extends JFrame {
 	};
 	private TextField TargetInput = new TextField();
 
+	private TextField TextInput = new TextField();
+
 	private Label UserInfo = new Label();
+
+	private ContactList ConnectedList = new ContactList();
 
 	public NetFrame() {
 		ObjectUpdater.setDaemon(true);
@@ -105,6 +126,18 @@ public class NetFrame extends JFrame {
 		UserInfo.setText(ioManeger.getThisID() + ":"
 				+ ioManeger.getListeningPort());
 		ClientDataPanel.add(UserInfo);
+
+		// TextInput
+		TextInput.setSize(400, 25);
+		TextInput.setLocation(185, 540);
+		TextInput.setVisible(true);
+		MainPanel.add(TextInput);
+
+		// ConnectedList
+		ConnectedList.setLocation(5, 30);
+		ConnectedList.setSize(185, 500);
+		ConnectedList.setVisible(true);
+		ClientDataPanel.add(ConnectedList);
 
 		ObjectUpdater.start();
 	}

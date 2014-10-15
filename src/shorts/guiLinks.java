@@ -10,6 +10,11 @@ public class guiLinks extends QuickLinks {
 	}
 
 	public void connect(String a) {
+
+		if (a.length() < 1) {
+			System.err.println("No target spesified");
+			return;
+		}
 		String port = null, target;
 		if (a.contains(":")) {
 			port = a.substring(a.indexOf(":") + 1, a.length());
