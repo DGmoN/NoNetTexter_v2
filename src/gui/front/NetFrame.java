@@ -60,11 +60,12 @@ public class NetFrame extends JFrame {
 			int x = 0;
 			for (String a : names) {
 				Boxes[x] = new ClientCheckBox(a);
-				Boxes[x].setLocation(5, 5 * (x + 1));
+				Boxes[x].setLocation(5, (10 * x) + (x * Boxes[x].getHeight()));
 				Boxes[x].setVisible(true);
 				this.add(Boxes[x]);
 				x++;
 			}
+			this.repaint();
 		}
 	}
 

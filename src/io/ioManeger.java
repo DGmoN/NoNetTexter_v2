@@ -16,6 +16,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
+import DataTypes.ByteConventions;
 import Tracker.EventTracker;
 
 public abstract class ioManeger extends Thread {
@@ -25,8 +26,41 @@ public abstract class ioManeger extends Thread {
 	private static class Connection { // Connection is the port master, manages
 										// outgoing and incoming bytes
 
+		private Thread Deamon = new Thread() {
+			@Override
+			public void run() {
+				byte[] buffer = new byte[8];
+				while (true) {
+
+					/*
+					 * try { ToTarget.write(new byte[] { (byte) 0xFF, 0x00,
+					 * 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }); ToTarget.flush();
+					 * } catch (IOException e1) { e1.printStackTrace(); }
+					 */
+
+					try {
+						if (FromTarget.available() == 8)
+							;
+						System.out
+								.println("Read: \t" + FromTarget.read(buffer));
+						manageIncomingData(buffer);
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+
+					try {
+						sleep(150);
+					} catch (InterruptedException e) {
+
+					}
+				}
+			}
+		};
+
 		public final boolean isOutgoingConection;
 
+		private static char TID = 0;
+		final char ID, externalID;
 		private final InputStream FromTarget;
 		private final OutputStream ToTarget;
 
@@ -35,11 +69,25 @@ public abstract class ioManeger extends Thread {
 		private final String Name;
 
 		public Connection(Socket s, boolean a) throws IOException {
+			Deamon.setDaemon(true);
+
+			ID = TID++;
 			_socket = s;
 			isOutgoingConection = a;
 			FromTarget = s.getInputStream();
 			ToTarget = s.getOutputStream();
 			Name = _socket.getInetAddress().getHostName();
+			ToTarget.write(new byte[] { (byte) ID });
+			byte[] d = new byte[1];
+			FromTarget.read(d);
+			externalID = (char) d[0];
+			System.out.printf("Internal ID: %s\t External ID: %s\n", (int) ID,
+					(int) externalID);
+			Deamon.start();
+		}
+
+		private void manageIncomingData(byte[] a) {
+			System.out.println(PORT + ":" + ByteConventions.bytesToHexes(a));
 		}
 	}
 
@@ -64,6 +112,7 @@ public abstract class ioManeger extends Thread {
 		@Override
 		public void run() {
 			resetSockets();
+			boolean makeConnection = true;
 			TT.Write("Starting daemon on port: " + SSocket.getLocalPort(), 0);
 			while (true) {
 				try {
@@ -75,7 +124,23 @@ public abstract class ioManeger extends Thread {
 					} else {
 						_Socket = SSocket.accept();
 					}
-					createConnection(_Socket, false);
+					for (Connection s : Connections) {
+						if (_Socket
+								.getInetAddress()
+								.getHostAddress()
+								.equals(s._socket.getInetAddress()
+										.getHostAddress())) {
+							makeConnection = false;
+						}
+
+					}
+					if (makeConnection) {
+						createConnection(_Socket);
+					} else {
+						System.err.printf(
+								"A connection is already made with: %s\n",
+								_Socket.getInetAddress().getHostAddress());
+					}
 					NetFrame.MainWindow.updateListOfContacts();
 					resetSockets();
 				} catch (SocketTimeoutException e) {
@@ -149,10 +214,10 @@ public abstract class ioManeger extends Thread {
 		return thisID;
 	}
 
-	private static void createConnection(Socket a, boolean isOutgoing) {
+	private static void createConnection(Socket a) {
 		try {
 			TT.Write("Creating connection to: " + a.getInetAddress(), 0);
-			Connections.add(new Connection(a, isOutgoing));
+			Connections.add(new Connection(a, isOutgoing_));
 			TT.Write("Connection made! :-)", 0);
 		} catch (IOException e) {
 			TT.Write(e);
