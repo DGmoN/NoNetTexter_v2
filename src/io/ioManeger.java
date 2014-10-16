@@ -15,6 +15,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import DataTypes.ByteConventions;
 import Tracker.EventTracker;
@@ -26,30 +28,38 @@ public abstract class ioManeger extends Thread {
 	private static class Connection { // Connection is the port master, manages
 										// outgoing and incoming bytes
 
+		public boolean markedForRemoval = false;
 		private Thread Deamon = new Thread() {
 			@Override
 			public void run() {
-				byte[] buffer = new byte[8];
+				int strike = 0;
+				byte[] buffer = new byte[16];
+				byte[] sendBuffer = null;
 				while (true) {
-
-					/*
-					 * try { ToTarget.write(new byte[] { (byte) 0xFF, 0x00,
-					 * 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }); ToTarget.flush();
-					 * } catch (IOException e1) { e1.printStackTrace(); }
-					 */
-
-					try {
-						if (FromTarget.available() == 8)
-							;
-						System.out
-								.println("Read: \t" + FromTarget.read(buffer));
-						manageIncomingData(buffer);
-					} catch (IOException e1) {
-						e1.printStackTrace();
+					if (strike == 5) {
+						markedForRemoval = true;
+						NetFrame.Cleanable = true;
+						return;
 					}
-
 					try {
-						sleep(150);
+						if (sendBuffer != null) {
+							ToTarget.write(sendBuffer);
+							ToTarget.flush();
+							sendBuffer = null;
+						}
+
+						TT.Write("Read: \t" + FromTarget.read(buffer), 0);
+						manageIncomingData(buffer);
+						strike = 0;
+					} catch (IOException e1) {
+						TT.Write(Name + " : Failure Strike #" + (strike++), 2);
+					}
+					try {
+						if (strike != 0) {
+							sleep(500);
+						} else
+							sleep(150);
+
 					} catch (InterruptedException e) {
 
 					}
@@ -81,13 +91,27 @@ public abstract class ioManeger extends Thread {
 			byte[] d = new byte[1];
 			FromTarget.read(d);
 			externalID = (char) d[0];
-			System.out.printf("Internal ID: %s\t External ID: %s\n", (int) ID,
-					(int) externalID);
+			System.out.printf(Name + " : Internal ID: %s\t External ID: %s\n",
+					(int) ID, (int) externalID);
 			Deamon.start();
 		}
 
 		private void manageIncomingData(byte[] a) {
-			System.out.println(PORT + ":" + ByteConventions.bytesToHexes(a));
+			TT.Write("DATA : " + ByteConventions.bytesToHexes(a), 0);
+
+		}
+
+		public String getName() {
+			return Name;
+		}
+
+		public void kill() {
+			try {
+				TT.Write("Closing socket: " + getName(), 1);
+				_socket.close();
+			} catch (IOException e) {
+				TT.Write(e);
+			}
 		}
 	}
 
@@ -95,6 +119,7 @@ public abstract class ioManeger extends Thread {
 
 	// only for outgoing connection
 	private static boolean isOutgoing_ = false;
+	private static boolean cleaning;
 	private static String Target;
 	private static int targetPort;
 	//
@@ -115,56 +140,58 @@ public abstract class ioManeger extends Thread {
 			boolean makeConnection = true;
 			TT.Write("Starting daemon on port: " + SSocket.getLocalPort(), 0);
 			while (true) {
-				try {
-					if (isOutgoing_) {
-						TT.Write("Trying to connect to: " + Target
-								+ "  \tPort: " + targetPort, 0);
-						_Socket = new Socket(Target, targetPort);
-						isOutgoing_ = false;
-					} else {
-						_Socket = SSocket.accept();
-					}
-					for (Connection s : Connections) {
-						if (_Socket
-								.getInetAddress()
-								.getHostAddress()
-								.equals(s._socket.getInetAddress()
-										.getHostAddress())) {
-							makeConnection = false;
+				if (!cleaning) {
+					try {
+						if (isOutgoing_) {
+							TT.Write("Trying to connect to: " + Target
+									+ "  \tPort: " + targetPort, 0);
+							_Socket = new Socket(Target, targetPort);
+							isOutgoing_ = false;
+						} else {
+							_Socket = SSocket.accept();
 						}
+						for (Connection s : Connections) {
+							if (_Socket
+									.getInetAddress()
+									.getHostAddress()
+									.equals(s._socket.getInetAddress()
+											.getHostAddress())) {
+								makeConnection = false;
+							}
 
-					}
-					if (makeConnection) {
-						createConnection(_Socket);
-					} else {
-						System.err.printf(
-								"A connection is already made with: %s\n",
-								_Socket.getInetAddress().getHostAddress());
-					}
-					NetFrame.MainWindow.updateListOfContacts();
-					resetSockets();
-				} catch (SocketTimeoutException e) {
+						}
+						if (makeConnection) {
+							createConnection(_Socket);
+						} else {
+							System.err.printf(
+									"A connection is already made with: %s\n",
+									_Socket.getInetAddress().getHostAddress());
+						}
+						NetFrame.MainWindow.updateListOfContacts();
+						resetSockets();
+					} catch (SocketTimeoutException e) {
 
-				} catch (UnknownHostException d) {
-					TT.Write(d.getLocalizedMessage(), 2);
-					isOutgoing_ = false;
-					System.err.println("No sutch host");
-					resetSockets();
-				} catch (IOException e) {
-					TT.Write(e);
+					} catch (UnknownHostException d) {
+						TT.Write(d.getLocalizedMessage(), 2);
+						isOutgoing_ = false;
+						System.err.println("No sutch host");
+						resetSockets();
+					} catch (IOException e) {
+						TT.Write(e);
+					}
+				} else {
+					try {
+						sleep(750);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		}
 
 		private void resetSockets() {
 			try {
-				if (_Socket != null) {
-					_Socket.close();
-				}
-				if (SSocket != null) {
-					SSocket.close();
-				}
-				SSocket = null;
 				_Socket = null;
 				SSocket = new ServerSocket(PORT);
 				SSocket.setSoTimeout(1000);
@@ -173,6 +200,29 @@ public abstract class ioManeger extends Thread {
 			}
 		}
 	};
+
+	/*
+	 * This is meant to remove all the dead connections, ID's will not be reset
+	 * unfortunately
+	 */
+
+	public static void cleanup() {
+		cleaning = true;
+		TT.Write("Cleaning!", 1);
+		long now = System.currentTimeMillis();
+		while (System.currentTimeMillis() - now < 1500) {
+
+		}
+		ArrayList<Connection> toBeRemoved = new ArrayList<Connection>();
+		for (Connection s : Connections) {
+			if (s.markedForRemoval) {
+				toBeRemoved.add(s);
+			}
+		}
+		TT.Write(toBeRemoved.size() + " : Removed", 1);
+		Connections.removeAll((toBeRemoved));
+		cleaning = false;
+	}
 
 	public static void init(int port) {
 		TT.Write("Starting IOManager...", 0);
@@ -205,7 +255,7 @@ public abstract class ioManeger extends Thread {
 		String[] ret = new String[Connections.size()];
 		int x = 0;
 		for (Connection s : Connections) {
-			ret[x++] = s.Name;
+			ret[x++] = s.getName();
 		}
 		return ret;
 	}

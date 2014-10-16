@@ -1,30 +1,35 @@
 package gui.front;
 
-import java.awt.Label;
-import java.awt.TextArea;
-import java.awt.TextField;
-
 import io.ioManeger;
+
+import java.awt.Label;
+import java.awt.TextField;
+import java.awt.event.KeyEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 
-import Formating.Strings.LINES;
 import quickLinks.gui.ButtonS;
+import quickLinks.gui.KeyEdit;
 import shorts.guiLinks;
 
 public class NetFrame extends JFrame {
 	public static NetFrame MainWindow;
+	public static boolean Cleanable = false;
 
 	// GUI ElamentUpdater
 	private Thread ObjectUpdater = new Thread() {
 		@Override
 		public void run() {
+			int x = 0;
 			while (true) {
 				try {
+					if (Cleanable) {
+						ioManeger.cleanup();
+						Cleanable = false;
+					}
 					if (ConnectedList.Boxes.length != ioManeger
 							.getConnectedCount()) {
 						ClientDataPanel.update();
@@ -118,9 +123,24 @@ public class NetFrame extends JFrame {
 			setData(TargetInput.getText());
 		}
 	};
-	private TextField TargetInput = new TextField();
 
-	private TextField TextInput = new TextField();
+	private KeyEdit TargetInput = new KeyEdit(
+			new String[] { "guiLinks:connect" }, new byte[] { (byte) 0x0A }) {
+
+		public Object[] GatherData(int s) {
+			return new Object[] { TargetInput.getText() };
+		}
+	};
+
+	private KeyEdit TextInput = new KeyEdit(new String[] { "guiLinks:send" },
+			new byte[] { (byte) 0x0A }) {
+
+		public Object[] GatherData(int s) {
+			String a = TextInput.getText();
+			TextInput.setText("");
+			return new Object[] { a };
+		}
+	};
 
 	private Label UserInfo = new Label();
 

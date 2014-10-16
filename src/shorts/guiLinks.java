@@ -10,7 +10,6 @@ public class guiLinks extends QuickLinks {
 	}
 
 	public void connect(String a) {
-
 		if (a.length() < 1) {
 			System.err.println("No target spesified");
 			return;
@@ -26,5 +25,9 @@ public class guiLinks extends QuickLinks {
 			ioManeger.ConnectTo(target, 5555);
 		else
 			ioManeger.ConnectTo(target, Integer.parseInt(port));
+	}
+
+	public void send(String a) {
+		System.out.println("Sending " + a);
 	}
 }

@@ -1,4 +1,2 @@
-[12:10:44][io.ioManeger][Info] : Starting IOManager...
-[12:10:44][io.ioManeger][Info] : Starting daemon on port: 5555
-[12:11:12][io.ioManeger][Info] : Creating connection to: /192.168.2.100
-[12:11:12][io.ioManeger][Info] : Connection made! :-)
+[16:32:22][io.ioManeger][Info] : Starting IOManager...
+[16:32:22][io.ioManeger][Info] : Starting daemon on port: 5555
