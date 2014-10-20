@@ -1,5 +1,8 @@
 package shorts;
 
+import java.awt.Color;
+
+import gui.front.NetFrame;
 import io.ioManeger;
 import quickLinks.QuickLinks;
 
@@ -27,7 +30,8 @@ public class guiLinks extends QuickLinks {
 			ioManeger.ConnectTo(target, Integer.parseInt(port));
 	}
 
-	public void send(String a) {
-		System.out.println("Sending " + a);
+	public void sendString(String a) {
+		ioManeger.sendString(a);
+		NetFrame.MainWindow.addText("Me: " + a);
 	}
 }

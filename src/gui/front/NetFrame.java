@@ -2,18 +2,25 @@ package gui.front;
 
 import io.ioManeger;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Label;
-import java.awt.TextField;
-import java.awt.event.KeyEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JTextPane;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
 
 import quickLinks.gui.ButtonS;
 import quickLinks.gui.KeyEdit;
 import shorts.guiLinks;
+import Formating.Strings;
+import Formating.Strings.LINES;
 
 public class NetFrame extends JFrame {
 	public static NetFrame MainWindow;
@@ -43,6 +50,11 @@ public class NetFrame extends JFrame {
 		}
 	};
 
+	private static Color[] colors = new Color[] { Color.black, Color.blue,
+			Color.cyan, Color.darkGray, Color.gray, Color.green,
+			Color.lightGray, Color.magenta, Color.orange, Color.pink,
+			Color.red, Color.yellow };
+
 	// GUI Elements : Classes
 	private class ContactList extends JPanel {
 		private ClientCheckBox[] Boxes = new ClientCheckBox[0];
@@ -65,7 +77,7 @@ public class NetFrame extends JFrame {
 			int x = 0;
 			for (String a : names) {
 				Boxes[x] = new ClientCheckBox(a);
-				Boxes[x].setLocation(5, (10 * x) + (x * Boxes[x].getHeight()));
+				Boxes[x].setLocation(5, (15 * x) + (x * Boxes[x].getHeight()));
 				Boxes[x].setVisible(true);
 				this.add(Boxes[x]);
 				x++;
@@ -82,7 +94,6 @@ public class NetFrame extends JFrame {
 			this.setVisible(true);
 			this.setBorder(BorderFactory.createBevelBorder(1));
 			this.setLayout(null);
-
 			// ConnectedList
 			this.add(ConnectedList);
 
@@ -106,14 +117,50 @@ public class NetFrame extends JFrame {
 		public ClientCheckBox(String name) {
 			Target = name;
 			this.setToolTipText("Select/Deselect: " + Target);
+
 			this.setText(Target);
 			this.setSize(180, 25);
 		}
 	}
 
+	private class TextDisplay extends JTextPane {
+
+		LINES lines = new LINES();
+
+		private int firstVisableIndex = 0;
+
+		public TextDisplay() {
+			this.setSize(590, 530);
+			this.setLocation(5, 5);
+			this.setVisible(true);
+			this.setEditable(false);
+			this.setFont(new Font("Verdana", Font.BOLD, 10));
+		}
+
+		public void add(String a) {
+			lines.add(a);
+			update();
+		}
+
+		private void update() {
+			String[] tempArr = lines.getAllLines();
+			String temp = "";
+			firstVisableIndex = tempArr.length - 33;
+			for (int x = 0; x < tempArr.length; x++) {
+				if (x >= firstVisableIndex)
+					temp += tempArr[x] + "\n";
+			}
+			this.setText(temp);
+		}
+	}
+
+	// End
+
 	// GUI Elements : Objects
 	private JPanel MainPanel;
 	private ClientPannel ClientDataPanel;
+
+	private TextDisplay Text = new TextDisplay();
 
 	ContactList ConnectedList = new ContactList();
 
@@ -132,8 +179,8 @@ public class NetFrame extends JFrame {
 		}
 	};
 
-	private KeyEdit TextInput = new KeyEdit(new String[] { "guiLinks:send" },
-			new byte[] { (byte) 0x0A }) {
+	private KeyEdit TextInput = new KeyEdit(
+			new String[] { "guiLinks:sendString" }, new byte[] { (byte) 0x0A }) {
 
 		public Object[] GatherData(int s) {
 			String a = TextInput.getText();
@@ -159,6 +206,7 @@ public class NetFrame extends JFrame {
 		this.setVisible(true);
 		this.setLayout(null);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		this.setTitle("NooooNetTexter");
 
 		// GUI init
 
@@ -193,6 +241,9 @@ public class NetFrame extends JFrame {
 		TextInput.setVisible(true);
 		MainPanel.add(TextInput);
 
+		// Text
+		MainPanel.add(Text);
+
 		ObjectUpdater.start();
 	}
 
@@ -202,7 +253,6 @@ public class NetFrame extends JFrame {
 		} else {
 			ioManeger.init(5555);
 		}
-
 		new guiLinks();
 		new NetFrame();
 	}
@@ -211,4 +261,34 @@ public class NetFrame extends JFrame {
 		ClientDataPanel.update();
 	}
 
+	public String[] getSelectedList() {
+		String[] ret = new String[ConnectedList.Boxes.length];
+		int x = 0;
+		for (ClientCheckBox a : ConnectedList.Boxes) {
+			if (a.isSelected())
+				ret[x++] = a.Target;
+		}
+		return ret;
+	}
+
+	public void addText(String a) {
+		Text.add(Strings.getTime(':') + " | " + a);
+
+	}
+
+	private void appendToPane(JTextPane tp, String msg, Color c) {
+		StyleContext sc = StyleContext.getDefaultStyleContext();
+		AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY,
+				StyleConstants.Foreground, c);
+
+		aset = sc.addAttribute(aset, StyleConstants.FontFamily,
+				"Lucida Console");
+		aset = sc.addAttribute(aset, StyleConstants.Alignment,
+				StyleConstants.ALIGN_JUSTIFIED);
+
+		int len = tp.getDocument().getLength();
+		tp.setCaretPosition(len);
+		tp.setCharacterAttributes(aset, false);
+		tp.replaceSelection(msg);
+	}
 }

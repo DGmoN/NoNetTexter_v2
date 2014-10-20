@@ -1,1 +1,9 @@
-This program is currently under construction.
+IT WORKS!!!
+
+How it works:
+
+	#1 Next to the button lablde "Connect" there is a TextField.
+	#2 You type your target IP/Name in there and press enter or click connect.
+	#3 If the connection is sucsessful the name/IP of the target should apeare in the panel to the right.
+	#4 To select a intended person to send data to the chek the box next to his name.
+	#5 Now in the bigger TextField you type the message you want to send and hit enter to send.
