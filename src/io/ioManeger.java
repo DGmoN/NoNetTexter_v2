@@ -215,6 +215,8 @@ public abstract class ioManeger extends Thread {
 						if (isOutgoing_) {
 							TT.Write("Trying to connect to: " + Target
 									+ "  \tPort: " + targetPort, 0);
+							NetFrame.MainWindow.addText("Connectiong to: "
+									+ Target);
 							_Socket = new Socket(Target, targetPort);
 							isOutgoing_ = false;
 						} else {
@@ -228,11 +230,11 @@ public abstract class ioManeger extends Thread {
 											.getHostAddress())) {
 								makeConnection = false;
 							}
-
 						}
 						if (makeConnection) {
 							createConnection(_Socket);
 						} else {
+							isOutgoing_ = false;
 							System.err.printf(
 									"A connection is already made with: %s\n",
 									_Socket.getInetAddress().getHostAddress());
@@ -278,11 +280,13 @@ public abstract class ioManeger extends Thread {
 
 	private static void sendData(int startMatker, byte[] data) {
 		String[] targets = NetFrame.MainWindow.getSelectedList();
-		if (targets == null) {
+		if (targets[0] == null) {
 			NetFrame.MainWindow.addText("[ERROR] No Targets Selected");
 			System.out.println("No Targets Selected");
 			return;
 		}
+		NetFrame.MainWindow.addText("Me: "
+				+ ByteConventions.byteSequenceToStrings(data));
 		TT.Write("Sending : " + startMatker, 0);
 		TT.Write("Data : " + ByteConventions.bytesToHexes(data), 0);
 		TT.Write("To: " + Formating.Strings.combine("\t", 1, targets), 0);

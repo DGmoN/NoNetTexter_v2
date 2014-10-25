@@ -1,0 +1,37 @@
+[09:35:44][io.ioManeger.Connection][Info] : Time taken to init: 1ms
+[09:35:44][io.ioManeger.Connection][Info] : Starting Deamon for"Thread-4"
+[09:35:44][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:44][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:44][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:44][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:45][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:45][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:45][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:45][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:45][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:45][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:46][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:46][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:46][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:46][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:46][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:46][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:46][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:47][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:47][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:47][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:47][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:47][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:47][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:48][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:48][io.ioManeger.Connection][Info] : DATA : 00000000000000000000000000000000
+[09:35:48][io.ioManeger.Connection][Error] : DGmoN-PC : Failure Strike #0
+Connection reset
+[09:35:48][io.ioManeger.Connection][Error] : DGmoN-PC : Failure Strike #1
+Connection reset by peer: socket write error
+[09:35:49][io.ioManeger.Connection][Error] : DGmoN-PC : Failure Strike #2
+Connection reset by peer: socket write error
+[09:35:49][io.ioManeger.Connection][Error] : DGmoN-PC : Failure Strike #3
+Connection reset by peer: socket write error
+[09:35:50][io.ioManeger.Connection][Error] : DGmoN-PC : Failure Strike #4
+Connection reset by peer: socket write error

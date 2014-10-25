@@ -1,5 +1,8 @@
 IT WORKS!!!
 
+You can download it from: http://www.mediafire.com/download/t3tb9es2y02sjh8
+	
+
 How it works:
 
 	#1 Next to the button lablde "Connect" there is a TextField.

@@ -1,6 +1,7 @@
 package gui.front;
 
 import io.ioManeger;
+import io.audio.AudioStuff;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -255,6 +256,7 @@ public class NetFrame extends JFrame {
 		}
 		new guiLinks();
 		new NetFrame();
+
 	}
 
 	public void updateListOfContacts() {

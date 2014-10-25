@@ -1,0 +1,32 @@
+[09:35:39][io.ioManeger][Info] : Time taken to init: 2ms
+[09:35:39][io.ioManeger][Info] : Starting IOManager...
+[09:35:39][io.ioManeger][Info] : Starting daemon on port: 5555
+[09:35:44][io.ioManeger][Info] : Creating connection to: /192.168.2.107
+[09:35:44][io.ioManeger][Info] : Connection made! :-)
+java.net.BindException: Address already in use: JVM_Bind
+	at java.net.DualStackPlainSocketImpl.bind0(Native Method)
+	at java.net.DualStackPlainSocketImpl.socketBind(Unknown Source)
+	at java.net.AbstractPlainSocketImpl.bind(Unknown Source)
+	at java.net.PlainSocketImpl.bind(Unknown Source)
+	at java.net.ServerSocket.bind(Unknown Source)
+	at java.net.ServerSocket.<init>(Unknown Source)
+	at java.net.ServerSocket.<init>(Unknown Source)
+	at io.ioManeger$1.resetSockets(ioManeger.java:268)
+	at io.ioManeger$1.run(ioManeger.java:243)
+[09:35:51][io.ioManeger][Warning] : Cleaning!
+[09:35:52][io.ioManeger][Warning] : 1 : Removed
+[09:36:16][io.ioManeger][Info] : Trying to connect to: 105.237.153.212  	Port: 5556
+java.net.ConnectException: Connection timed out: connect
+	at java.net.DualStackPlainSocketImpl.connect0(Native Method)
+	at java.net.DualStackPlainSocketImpl.socketConnect(Unknown Source)
+	at java.net.AbstractPlainSocketImpl.doConnect(Unknown Source)
+	at java.net.AbstractPlainSocketImpl.connectToAddress(Unknown Source)
+	at java.net.AbstractPlainSocketImpl.connect(Unknown Source)
+	at java.net.PlainSocketImpl.connect(Unknown Source)
+	at java.net.SocksSocketImpl.connect(Unknown Source)
+	at java.net.Socket.connect(Unknown Source)
+	at java.net.Socket.connect(Unknown Source)
+	at java.net.Socket.<init>(Unknown Source)
+	at java.net.Socket.<init>(Unknown Source)
+	at io.ioManeger$1.run(ioManeger.java:220)
+[09:36:37][io.ioManeger][Info] : Trying to connect to: 105.237.153.212  	Port: 5556

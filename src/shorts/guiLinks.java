@@ -32,6 +32,5 @@ public class guiLinks extends QuickLinks {
 
 	public void sendString(String a) {
 		ioManeger.sendString(a);
-		NetFrame.MainWindow.addText("Me: " + a);
 	}
 }
