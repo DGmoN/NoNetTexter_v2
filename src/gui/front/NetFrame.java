@@ -1,11 +1,13 @@
 package gui.front;
 
 import io.ioManeger;
+import io.ioManeger.Connection;
 import io.audio.AudioStuff;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Label;
+import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -27,7 +29,7 @@ public class NetFrame extends JFrame {
 	public static NetFrame MainWindow;
 	public static boolean Cleanable = false;
 
-	// GUI ElamentUpdater
+	// GUI ElamentUpdater : makes the thingys that need to change change
 	private Thread ObjectUpdater = new Thread() {
 		@Override
 		public void run() {
@@ -42,6 +44,11 @@ public class NetFrame extends JFrame {
 							.getConnectedCount()) {
 						ClientDataPanel.update();
 					}
+
+					for (ClientCheckBox s : ConnectedList.Boxes) {
+						s.undateLatency();
+					}
+
 					sleep(250);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
@@ -73,10 +80,10 @@ public class NetFrame extends JFrame {
 				for (ClientCheckBox a : Boxes) {
 					this.remove(a);
 				}
-			String[] names = ioManeger.getConnectedNames();
-			Boxes = new ClientCheckBox[names.length];
+			Connection[] con = ioManeger.getConnections();
+			Boxes = new ClientCheckBox[con.length];
 			int x = 0;
-			for (String a : names) {
+			for (Connection a : con) {
 				Boxes[x] = new ClientCheckBox(a);
 				Boxes[x].setLocation(5, (15 * x) + (x * Boxes[x].getHeight()));
 				Boxes[x].setVisible(true);
@@ -113,14 +120,18 @@ public class NetFrame extends JFrame {
 	}
 
 	private class ClientCheckBox extends JCheckBox {
-		final String Target;
+		final Connection Target;
 
-		public ClientCheckBox(String name) {
-			Target = name;
-			this.setToolTipText("Select/Deselect: " + Target);
+		public ClientCheckBox(ioManeger.Connection con) {
+			Target = con;
+			this.setToolTipText("Select/Deselect: " + Target.getName());
 
-			this.setText(Target);
+			this.setText(Target.getName());
 			this.setSize(180, 25);
+		}
+
+		public void undateLatency() {
+			this.setText(Target.getName() + " : " + Target.getLatency() + "ms");
 		}
 	}
 
@@ -249,14 +260,22 @@ public class NetFrame extends JFrame {
 	}
 
 	public static void main(String[] args) {
-		if (args.length > 0) {
-			ioManeger.init(Integer.parseInt(args[0]));
-		} else {
-			ioManeger.init(5555);
-		}
+		int port = 5555;
+		System.setProperty("Write", "false");
+		if (args.length > 0)
+			for (String a : args) {
+				if (a.equals("-l"))
+					System.setProperty("Write", "true");
+				try {
+					port = Integer.parseInt(a);
+				} catch (Exception e) {
+
+				}
+			}
+		ioManeger.init(port);
+
 		new guiLinks();
 		new NetFrame();
-
 	}
 
 	public void updateListOfContacts() {
@@ -268,7 +287,7 @@ public class NetFrame extends JFrame {
 		int x = 0;
 		for (ClientCheckBox a : ConnectedList.Boxes) {
 			if (a.isSelected())
-				ret[x++] = a.Target;
+				ret[x++] = a.Target.getName();
 		}
 		return ret;
 	}

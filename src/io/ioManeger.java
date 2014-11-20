@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import web.HtmlSection;
 import DataTypes.ByteConventions;
 import Database.database;
 import Formating.Strings;
@@ -29,22 +30,63 @@ public abstract class ioManeger extends Thread {
 
 	public static boolean ShowStreamText = false;
 
-	private static final byte START_OF_STRING = (byte) 0x8A;
-	private static final byte END = (byte) 0xFF;
+	private static final byte SECTION_OF_STRING = (byte) 0x8A;
+	private static final byte END_OF_STRING = (byte) 0x9A;
 
-	private static class Connection { // Connection is the port master, manages
+	private static class byteStack {
+		private byte[] Data = new byte[0];
+		int size = 0;
+
+		public void add(byte e) { // add object to top of the stack, stack limit
+									// undefiend
+			byte[] NewData = new byte[++size];
+			for (int x = 0; x < size - 1; x++) {
+				NewData[x] = Data[x];
+			}
+			NewData[size - 1] = e;
+			Data = NewData;
+		}
+
+		public byte get() {
+			byte ret;
+			byte[] NewData = new byte[--size];
+			for (int x = 0; x < size; x++) {
+				NewData[x] = Data[x];
+			}
+			ret = Data[size];
+			Data = NewData;
+			return ret;
+		}
+
+		public void filp() {
+			Data = ByteConventions.flipArr(Data);
+		}
+
+		public boolean empty() {
+			return size == 0;
+		}
+	}
+
+	public static class Connection { // Connection is the port master, manages
 										// outgoing and incoming bytes
 
 		protected EventTracker myTracker;
 		public boolean markedForRemoval = false;
 		boolean DataReady = false;
 		byte[] sendBuffer = null;
+		byteStack StringStack = new byteStack();
 
+		long now, timeTaken = -1;
+		
+		public long getLatency(){
+			return timeTaken;
+		}
+		
 		private Thread Deamon = new Thread() {
 			@Override
 			public void run() {
 				int strike = 0;
-				long now, timeTaken = -1;
+				
 				byte[] buffer = new byte[16];
 				if (isOutgoingConection)
 					NetFrame.MainWindow.addText("[INFO] Connected to: " + Name);
@@ -82,6 +124,7 @@ public abstract class ioManeger extends Thread {
 								+ (strike++) + "\n" + e1.getLocalizedMessage(),
 								2);
 					}
+					timeTaken = System.currentTimeMillis() - now;
 					try {
 						if (strike != 0) {
 							sleep(500);
@@ -91,15 +134,12 @@ public abstract class ioManeger extends Thread {
 					} catch (InterruptedException e) {
 
 					}
-					timeTaken = System.currentTimeMillis() - now;
+
 				}
 			}
 		};
 
 		public final boolean isOutgoingConection;
-
-		private static char TID = 0;
-		final char ID, externalID;
 		private final InputStream FromTarget;
 		private final OutputStream ToTarget;
 
@@ -109,7 +149,7 @@ public abstract class ioManeger extends Thread {
 
 		public Connection(Socket s, boolean a) throws IOException {
 			Deamon.setDaemon(true);
-			ID = TID++;
+
 			_socket = s;
 			isOutgoingConection = a;
 			FromTarget = s.getInputStream();
@@ -118,23 +158,15 @@ public abstract class ioManeger extends Thread {
 
 			myTracker = EventTracker.init("logs/Connections/" + Name,
 					this.getClass());
-			ToTarget.write(new byte[] { (byte) ID });
-			byte[] d = new byte[1];
-			FromTarget.read(d);
-			externalID = (char) d[0];
-			System.out.printf(Name + " : Internal ID: %s\t External ID: %s\n",
-					(int) ID, (int) externalID);
 			Deamon.start();
 
 		}
 
 		private int handaling = -1;
-		String temp = "";
 
 		private void manageIncomingData(byte[] a) {
 			myTracker.Write("DATA : " + ByteConventions.bytesToHexes(a), 0);
-
-			if (a[0] == START_OF_STRING) {
+			if (a[0] == SECTION_OF_STRING) {
 				handaling = 0;
 			}
 			switch (handaling) {
@@ -142,20 +174,29 @@ public abstract class ioManeger extends Thread {
 				break;
 			case 0:
 				myTracker.Write("Its a string!", 0);
-				for (int x = 0; x < a.length; x++) {
-					if (a[x] == END) {
-						NetFrame.MainWindow.addText(Name + ": " + temp);
-						temp = "";
-						myTracker.Write(temp, 0);
+				for (int x = 1; x < a.length; x++) {
+					if (a[x] == END_OF_STRING) {
+						printStringStack();
 						handaling = -1;
 						break;
+					} else {
+						StringStack.add(a[x]);
 					}
-					if (a[x] != START_OF_STRING)
-						temp += (char) a[x];
 				}
 				break;
-
 			}
+		}
+
+		String temp = "";
+
+		public void printStringStack() {
+			StringStack.filp();
+			while (!StringStack.empty()) {
+				temp += (char) StringStack.get();
+			}
+			NetFrame.MainWindow.addText(Name + ": " + temp);
+			temp = "";
+			myTracker.Write(temp, 0);
 		}
 
 		public void addDataForSend(int mode, byte[] data) {
@@ -163,13 +204,18 @@ public abstract class ioManeger extends Thread {
 			int x = 0;
 			switch (mode) {
 			case 0:
-				sendBuffer[x++] = START_OF_STRING;
+				sendBuffer[x++] = SECTION_OF_STRING;
 				break;
 			}
 			for (byte s : data) {
 				sendBuffer[(x++)] = s;
 			}
-			sendBuffer[x] = END;
+
+			switch (mode) {
+			case 0:
+				sendBuffer[x++] = END_OF_STRING;
+				break;
+			}
 			DataReady = true;
 		}
 
@@ -272,6 +318,11 @@ public abstract class ioManeger extends Thread {
 			}
 		}
 	};
+	
+	public static Connection[] getConnections(){
+		Connection[] ret = new Connection[Connections.size()];
+		return Connections.toArray(ret);
+	}
 
 	public static void sendString(String a) {
 		System.out.println("Sending: " + a);
