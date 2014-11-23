@@ -1,16 +1,17 @@
 package gui.front;
 
+import gui.ClientCheckBox;
 import io.ioManeger;
 import io.ioManeger.Connection;
-import io.audio.AudioStuff;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Label;
-import java.util.Arrays;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.awt.event.WindowStateListener;
 
 import javax.swing.BorderFactory;
-import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
@@ -119,22 +120,6 @@ public class NetFrame extends JFrame {
 		}
 	}
 
-	private class ClientCheckBox extends JCheckBox {
-		final Connection Target;
-
-		public ClientCheckBox(ioManeger.Connection con) {
-			Target = con;
-			this.setToolTipText("Select/Deselect: " + Target.getName());
-
-			this.setText(Target.getName());
-			this.setSize(180, 25);
-		}
-
-		public void undateLatency() {
-			this.setText(Target.getName() + " : " + Target.getLatency() + "ms");
-		}
-	}
-
 	private class TextDisplay extends JTextPane {
 
 		LINES lines = new LINES();
@@ -217,8 +202,51 @@ public class NetFrame extends JFrame {
 		this.setResizable(false);
 		this.setVisible(true);
 		this.setLayout(null);
-		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.setTitle("NooooNetTexter");
+		this.addWindowListener(new WindowListener() {
+
+			@Override
+			public void windowOpened(WindowEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void windowIconified(WindowEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void windowDeiconified(WindowEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void windowDeactivated(WindowEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void windowClosing(WindowEvent arg0) {
+				ioManeger.closeAll();
+				System.exit(0);
+			}
+
+			@Override
+			public void windowClosed(WindowEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void windowActivated(WindowEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 
 		// GUI init
 
@@ -262,16 +290,16 @@ public class NetFrame extends JFrame {
 	public static void main(String[] args) {
 		int port = 5555;
 		System.setProperty("Write", "false");
-		if (args.length > 0)
-			for (String a : args) {
-				if (a.equals("-l"))
-					System.setProperty("Write", "true");
-				try {
-					port = Integer.parseInt(a);
-				} catch (Exception e) {
-
-				}
+		for (String a : args) {
+			if (a.equals("-l")){
+				System.setProperty("Write", "true");
 			}
+			try {
+				port = Integer.parseInt(a);
+			} catch (Exception e) {
+
+			}
+		}
 		ioManeger.init(port);
 
 		new guiLinks();
@@ -287,7 +315,7 @@ public class NetFrame extends JFrame {
 		int x = 0;
 		for (ClientCheckBox a : ConnectedList.Boxes) {
 			if (a.isSelected())
-				ret[x++] = a.Target.getName();
+				ret[x++] = a.getTarget().getName();
 		}
 		return ret;
 	}

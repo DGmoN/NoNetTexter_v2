@@ -32,6 +32,8 @@ public abstract class ioManeger extends Thread {
 
 	private static final byte SECTION_OF_STRING = (byte) 0x8A;
 	private static final byte END_OF_STRING = (byte) 0x9A;
+	private static final byte CLOSE_CONNECTION = (byte) 0x99;
+	
 
 	private static class byteStack {
 		private byte[] Data = new byte[0];
@@ -77,16 +79,16 @@ public abstract class ioManeger extends Thread {
 		byteStack StringStack = new byteStack();
 
 		long now, timeTaken = -1;
-		
-		public long getLatency(){
+
+		public long getLatency() {
 			return timeTaken;
 		}
-		
+
 		private Thread Deamon = new Thread() {
 			@Override
 			public void run() {
 				int strike = 0;
-				
+
 				byte[] buffer = new byte[16];
 				if (isOutgoingConection)
 					NetFrame.MainWindow.addText("[INFO] Connected to: " + Name);
@@ -167,8 +169,9 @@ public abstract class ioManeger extends Thread {
 		private void manageIncomingData(byte[] a) {
 			myTracker.Write("DATA : " + ByteConventions.bytesToHexes(a), 0);
 			if (a[0] == SECTION_OF_STRING) {
-				handaling = 0;
-			}
+				handaling = 0; // 0 -> to manage string data;
+			} else if (a[0] == CLOSE_CONNECTION)
+				handaling = 1; // 1 -> to close the connection
 			switch (handaling) {
 			case -1:
 				break;
@@ -184,7 +187,14 @@ public abstract class ioManeger extends Thread {
 					}
 				}
 				break;
+
+			case 1:
+				myTracker.Write("Close requested from peer", 0);
+				kill();
+				close();
+				break;
 			}
+
 		}
 
 		String temp = "";
@@ -223,6 +233,8 @@ public abstract class ioManeger extends Thread {
 			return Name;
 		}
 
+		private boolean waitingToClose = false;
+		
 		public void kill() {
 			try {
 				TT.Write("Closing socket: " + getName(), 1);
@@ -230,6 +242,11 @@ public abstract class ioManeger extends Thread {
 			} catch (IOException e) {
 				TT.Write(e);
 			}
+		}
+
+		public void close() {
+			sendData(0, new byte[] { CLOSE_CONNECTION });
+			waitingToClose = true;
 		}
 	}
 
@@ -318,8 +335,8 @@ public abstract class ioManeger extends Thread {
 			}
 		}
 	};
-	
-	public static Connection[] getConnections(){
+
+	public static Connection[] getConnections() {
 		Connection[] ret = new Connection[Connections.size()];
 		return Connections.toArray(ret);
 	}
@@ -349,6 +366,12 @@ public abstract class ioManeger extends Thread {
 					s.addDataForSend(startMatker, data);
 			}
 
+		}
+	}
+	
+	public static void closeAll(){
+		for(Connection ss:Connections){
+			ss.close();
 		}
 	}
 
