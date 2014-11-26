@@ -1,7 +1,7 @@
 package gui;
 
+import io.Connection;
 import io.ioManeger;
-import io.ioManeger.Connection;
 
 import java.awt.Button;
 import java.awt.event.ActionEvent;
@@ -15,7 +15,7 @@ public class ClientCheckBox extends JCheckBox {
 
 	Button CloseConnection = new Button("");
 
-	public ClientCheckBox(ioManeger.Connection con) {
+	public ClientCheckBox(Connection con) {
 		Target = con;
 		this.setToolTipText("Select/Deselect: " + getTarget().getName());
 
@@ -30,12 +30,6 @@ public class ClientCheckBox extends JCheckBox {
 		CloseConnection.setSize(5, 5);
 		CloseConnection.setVisible(true);
 		CloseConnection.setLocation(this.getWidth()-5, this.getHeight()-5);
-		CloseConnection.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				Target.close();
-			}
-		});
 		this.add(CloseConnection);
 	}
 

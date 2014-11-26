@@ -28,228 +28,6 @@ public abstract class ioManeger extends Thread {
 
 	private static String thisID;
 
-	public static boolean ShowStreamText = false;
-
-	private static final byte SECTION_OF_STRING = (byte) 0x8A;
-	private static final byte END_OF_STRING = (byte) 0x9A;
-	private static final byte CLOSE_CONNECTION = (byte) 0x99;
-	
-
-	private static class byteStack {
-		private byte[] Data = new byte[0];
-		int size = 0;
-
-		public void add(byte e) { // add object to top of the stack, stack limit
-									// undefiend
-			byte[] NewData = new byte[++size];
-			for (int x = 0; x < size - 1; x++) {
-				NewData[x] = Data[x];
-			}
-			NewData[size - 1] = e;
-			Data = NewData;
-		}
-
-		public byte get() {
-			byte ret;
-			byte[] NewData = new byte[--size];
-			for (int x = 0; x < size; x++) {
-				NewData[x] = Data[x];
-			}
-			ret = Data[size];
-			Data = NewData;
-			return ret;
-		}
-
-		public void filp() {
-			Data = ByteConventions.flipArr(Data);
-		}
-
-		public boolean empty() {
-			return size == 0;
-		}
-	}
-
-	public static class Connection { // Connection is the port master, manages
-										// outgoing and incoming bytes
-
-		protected EventTracker myTracker;
-		public boolean markedForRemoval = false;
-		boolean DataReady = false;
-		byte[] sendBuffer = null;
-		byteStack StringStack = new byteStack();
-
-		long now, timeTaken = -1;
-
-		public long getLatency() {
-			return timeTaken;
-		}
-
-		private Thread Deamon = new Thread() {
-			@Override
-			public void run() {
-				int strike = 0;
-
-				byte[] buffer = new byte[16];
-				if (isOutgoingConection)
-					NetFrame.MainWindow.addText("[INFO] Connected to: " + Name);
-				else
-					NetFrame.MainWindow
-							.addText("[INFO] " + Name + " Connected");
-				myTracker.Write("Starting Deamon for\"" + getName() + "\"", 0);
-				while (true) {
-					now = System.currentTimeMillis();
-					if (ShowStreamText)
-						myTracker.Write("Cycle time = " + timeTaken, 0);
-					if (strike == 5) {
-						markedForRemoval = true;
-						NetFrame.Cleanable = true;
-						return;
-					}
-					try {
-						if (DataReady) {
-							ToTarget.write(sendBuffer);
-							ToTarget.flush();
-							DataReady = false;
-							sendBuffer = null;
-						} else {
-							ToTarget.write(new byte[] { 0x00 });
-							ToTarget.flush();
-						}
-						FromTarget.read(buffer);
-						if (ShowStreamText)
-							myTracker.Write("Read: \t" + buffer.length, 0);
-						manageIncomingData(buffer);
-						buffer = new byte[16];
-						strike = 0;
-					} catch (IOException e1) {
-						myTracker.Write(Name + " : Failure Strike #"
-								+ (strike++) + "\n" + e1.getLocalizedMessage(),
-								2);
-					}
-					timeTaken = System.currentTimeMillis() - now;
-					try {
-						if (strike != 0) {
-							sleep(500);
-						} else
-							sleep(150);
-
-					} catch (InterruptedException e) {
-
-					}
-
-				}
-			}
-		};
-
-		public final boolean isOutgoingConection;
-		private final InputStream FromTarget;
-		private final OutputStream ToTarget;
-
-		private final Socket _socket;
-
-		private final String Name;
-
-		public Connection(Socket s, boolean a) throws IOException {
-			Deamon.setDaemon(true);
-
-			_socket = s;
-			isOutgoingConection = a;
-			FromTarget = s.getInputStream();
-			ToTarget = s.getOutputStream();
-			Name = _socket.getInetAddress().getHostName();
-
-			myTracker = EventTracker.init("logs/Connections/" + Name,
-					this.getClass());
-			Deamon.start();
-
-		}
-
-		private int handaling = -1;
-
-		private void manageIncomingData(byte[] a) {
-			myTracker.Write("DATA : " + ByteConventions.bytesToHexes(a), 0);
-			if (a[0] == SECTION_OF_STRING) {
-				handaling = 0; // 0 -> to manage string data;
-			} else if (a[0] == CLOSE_CONNECTION)
-				handaling = 1; // 1 -> to close the connection
-			switch (handaling) {
-			case -1:
-				break;
-			case 0:
-				myTracker.Write("Its a string!", 0);
-				for (int x = 1; x < a.length; x++) {
-					if (a[x] == END_OF_STRING) {
-						printStringStack();
-						handaling = -1;
-						break;
-					} else {
-						StringStack.add(a[x]);
-					}
-				}
-				break;
-
-			case 1:
-				myTracker.Write("Close requested from peer", 0);
-				kill();
-				close();
-				break;
-			}
-
-		}
-
-		String temp = "";
-
-		public void printStringStack() {
-			StringStack.filp();
-			while (!StringStack.empty()) {
-				temp += (char) StringStack.get();
-			}
-			NetFrame.MainWindow.addText(Name + ": " + temp);
-			temp = "";
-			myTracker.Write(temp, 0);
-		}
-
-		public void addDataForSend(int mode, byte[] data) {
-			sendBuffer = new byte[data.length + 2];
-			int x = 0;
-			switch (mode) {
-			case 0:
-				sendBuffer[x++] = SECTION_OF_STRING;
-				break;
-			}
-			for (byte s : data) {
-				sendBuffer[(x++)] = s;
-			}
-
-			switch (mode) {
-			case 0:
-				sendBuffer[x++] = END_OF_STRING;
-				break;
-			}
-			DataReady = true;
-		}
-
-		public String getName() {
-			return Name;
-		}
-
-		private boolean waitingToClose = false;
-		
-		public void kill() {
-			try {
-				TT.Write("Closing socket: " + getName(), 1);
-				_socket.close();
-			} catch (IOException e) {
-				TT.Write(e);
-			}
-		}
-
-		public void close() {
-			sendData(0, new byte[] { CLOSE_CONNECTION });
-			waitingToClose = true;
-		}
-	}
-
 	private static int PORT; // Local port ID
 
 	// only for outgoing connection
@@ -281,7 +59,6 @@ public abstract class ioManeger extends Thread {
 							NetFrame.MainWindow.addText("Connectiong to: "
 									+ Target);
 							_Socket = new Socket(Target, targetPort);
-							isOutgoing_ = false;
 						} else {
 							_Socket = SSocket.accept();
 						}
@@ -289,7 +66,7 @@ public abstract class ioManeger extends Thread {
 							if (_Socket
 									.getInetAddress()
 									.getHostAddress()
-									.equals(s._socket.getInetAddress()
+									.equals(s.get_socket().getInetAddress()
 											.getHostAddress())) {
 								makeConnection = false;
 							}
@@ -297,7 +74,6 @@ public abstract class ioManeger extends Thread {
 						if (makeConnection) {
 							createConnection(_Socket);
 						} else {
-							isOutgoing_ = false;
 							System.err.printf(
 									"A connection is already made with: %s\n",
 									_Socket.getInetAddress().getHostAddress());
@@ -328,11 +104,20 @@ public abstract class ioManeger extends Thread {
 		private void resetSockets() {
 			try {
 				_Socket = null;
+			} catch (Exception e) {
+				TT.Write(e);
+			}
+			try {
 				SSocket = new ServerSocket(PORT);
+			} catch (Exception e) {
+				TT.Write(e);
+			}
+			try {
 				SSocket.setSoTimeout(1000);
 			} catch (Exception e) {
 				TT.Write(e);
 			}
+
 		}
 	};
 
@@ -341,12 +126,7 @@ public abstract class ioManeger extends Thread {
 		return Connections.toArray(ret);
 	}
 
-	public static void sendString(String a) {
-		System.out.println("Sending: " + a);
-		sendData(0, ByteConventions.getCharStringAsBytes(a));
-	}
-
-	private static void sendData(int startMatker, byte[] data) {
+	public static void sendData(int Matker, byte[] data) {
 		String[] targets = NetFrame.MainWindow.getSelectedList();
 		if (targets[0] == null) {
 			NetFrame.MainWindow.addText("[ERROR] No Targets Selected");
@@ -355,23 +135,17 @@ public abstract class ioManeger extends Thread {
 		}
 		NetFrame.MainWindow.addText("Me: "
 				+ ByteConventions.byteSequenceToStrings(data));
-		TT.Write("Sending : " + startMatker, 0);
+		TT.Write("Sending : " + Matker, 0);
 		TT.Write("Data : " + ByteConventions.bytesToHexes(data), 0);
 		TT.Write("To: " + Formating.Strings.combine("\t", 1, targets), 0);
-		System.out.println("To: \n\n"
+		System.out.println("To: \n"
 				+ Formating.Strings.combine("\t", 1, targets));
 		for (Connection s : Connections) {
 			for (String a : targets) {
-				if (s.Name.equals(a))
-					s.addDataForSend(startMatker, data);
+				if (s.getName().equals(a))
+					s.addDataForSend(Matker, data);
 			}
 
-		}
-	}
-	
-	public static void closeAll(){
-		for(Connection ss:Connections){
-			ss.close();
 		}
 	}
 
@@ -390,7 +164,7 @@ public abstract class ioManeger extends Thread {
 		for (Connection s : Connections) {
 			if (s.markedForRemoval) {
 				toBeRemoved.add(s);
-				NetFrame.MainWindow.addText("[INFO] " + s.Name
+				NetFrame.MainWindow.addText("[INFO] " + s.getName()
 						+ " has disconnected");
 			}
 		}
@@ -400,7 +174,6 @@ public abstract class ioManeger extends Thread {
 	}
 
 	public static void init(int port) {
-
 		TT = EventTracker.init("Logs/IOLogs.txt", ioManeger.class);
 		TT.Write("Starting IOManager...", 0);
 		try {
@@ -443,8 +216,10 @@ public abstract class ioManeger extends Thread {
 
 	private static void createConnection(Socket a) {
 		try {
-			TT.Write("Creating connection to: " + a.getInetAddress(), 0);
+			TT.Write("Creating connection to: " + a.getInetAddress()
+					+ " : is outgoing -> " + isOutgoing_, 0);
 			Connections.add(new Connection(a, isOutgoing_));
+			isOutgoing_ = false;
 			TT.Write("Connection made! :-)", 0);
 		} catch (IOException e) {
 			TT.Write(e);

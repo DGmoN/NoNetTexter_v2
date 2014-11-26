@@ -1,15 +1,15 @@
 package gui.front;
 
 import gui.ClientCheckBox;
+import io.Connection;
+import io.Encryption;
 import io.ioManeger;
-import io.ioManeger.Connection;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Label;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.awt.event.WindowStateListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -189,6 +189,7 @@ public class NetFrame extends JFrame {
 	private Label UserInfo = new Label();
 
 	public NetFrame() {
+
 		ObjectUpdater.setDaemon(true);
 		if (MainWindow == null)
 			MainWindow = this;
@@ -203,50 +204,7 @@ public class NetFrame extends JFrame {
 		this.setVisible(true);
 		this.setLayout(null);
 		this.setTitle("NooooNetTexter");
-		this.addWindowListener(new WindowListener() {
-
-			@Override
-			public void windowOpened(WindowEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void windowIconified(WindowEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void windowDeiconified(WindowEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void windowDeactivated(WindowEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void windowClosing(WindowEvent arg0) {
-				ioManeger.closeAll();
-				System.exit(0);
-			}
-
-			@Override
-			public void windowClosed(WindowEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void windowActivated(WindowEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-		});
+		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
 		// GUI init
 
@@ -291,7 +249,7 @@ public class NetFrame extends JFrame {
 		int port = 5555;
 		System.setProperty("Write", "false");
 		for (String a : args) {
-			if (a.equals("-l")){
+			if (a.equals("-l")) {
 				System.setProperty("Write", "true");
 			}
 			try {

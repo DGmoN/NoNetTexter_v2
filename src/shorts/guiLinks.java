@@ -2,6 +2,7 @@ package shorts;
 
 import java.awt.Color;
 
+import DataTypes.ByteConventions;
 import gui.front.NetFrame;
 import io.ioManeger;
 import quickLinks.QuickLinks;
@@ -31,6 +32,7 @@ public class guiLinks extends QuickLinks {
 	}
 
 	public void sendString(String a) {
-		ioManeger.sendString(a);
+		ioManeger.sendData(0, a.getBytes());
+
 	}
 }
