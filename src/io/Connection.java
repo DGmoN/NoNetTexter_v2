@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
+import crypto.Encryption;
 import DataTypes.ByteConventions;
 import Tracker.EventTracker;
 
@@ -179,7 +180,7 @@ public class Connection { // Connection is the port master, manages
 		}
 
 		public void read() throws IOException {
-			byte[] buffer = new byte[128];
+			byte[] buffer = new byte[255];
 			FromTarget.read(buffer);
 			if (ShowStreamText) {
 				myTracker.Write("Read: \t" + buffer.length, 0);

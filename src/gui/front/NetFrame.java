@@ -2,7 +2,6 @@ package gui.front;
 
 import gui.ClientCheckBox;
 import io.Connection;
-import io.Encryption;
 import io.ioManeger;
 
 import java.awt.Color;
@@ -20,6 +19,7 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 
+import crypto.Encryption;
 import quickLinks.gui.ButtonS;
 import quickLinks.gui.KeyEdit;
 import shorts.guiLinks;
