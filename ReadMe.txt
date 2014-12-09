@@ -19,7 +19,6 @@ Changelog - Build 0003 11/14
 ****************************
 
 Revised ioManager allowing for more trustworthy transmission
-Added encryption protocols, only PGP for now but it seems to work
 
 Bugs - Build 0003
 *****************
